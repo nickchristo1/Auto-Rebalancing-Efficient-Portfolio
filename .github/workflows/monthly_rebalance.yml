@@ -1,0 +1,30 @@
+name: Monthly Auto-Rebalance
+
+on:
+  schedule:
+    # Runs every Monday at 14:30 UTC
+    - cron: '30 13 * * 1'
+  workflow_dispatch: # Allows you to manually trigger it from the Actions tab
+
+jobs:
+  rebalance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Dependencies
+        run: |
+          pip install alpaca-trade-api
+
+      - name: Run Rebalance Script
+        env:
+          # This pulls your secret from GitHub Settings
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+        run: python auto_rebalance.py
