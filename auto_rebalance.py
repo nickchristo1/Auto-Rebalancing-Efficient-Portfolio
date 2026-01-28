@@ -3,7 +3,6 @@
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
-# from keys import key, secret_key
 from portfolio_optimization import optimal_portfolio
 import time
 import os
@@ -12,8 +11,6 @@ import os
 api_key = os.getenv('ALPACA_API_KEY')
 api_secret = os.getenv('ALPACA_SECRET_KEY')
 
-# api_key = key
-# api_secret = secret_key
 
 # Create a paper trading client
 client = TradingClient(api_key, api_secret, paper=True)
