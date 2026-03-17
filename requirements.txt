@@ -5,5 +5,3 @@ matplotlib
 scipy
 alpaca-py
 tabulate
-datetime
-smtplib
