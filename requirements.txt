@@ -6,5 +6,4 @@ scipy
 alpaca-py
 tabulate
 datetime
-io
 smtplib
