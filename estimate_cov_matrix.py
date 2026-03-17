@@ -40,7 +40,7 @@ tickers = ['AMT',     # American Tower      Sector: Real Estate
            'XOM']     # ExxonMobil          Sector: Energy
 
 data_amount = 700  # Amount of data wanted in the optimization
-prices = yf.download(tickers, period="4y")["Close"]  # Extracted prices from yfinance
+prices = yf.download(tickers, period="4y", auto_adjust=True)["Close"]  # Extracted prices from yfinance
 prices = prices.dropna().tail(data_amount)
 log_returns = np.log(prices / prices.shift(1)).dropna()  # Prices turned into returns
 log_returns_std = (log_returns - log_returns.mean()) / log_returns.std()
