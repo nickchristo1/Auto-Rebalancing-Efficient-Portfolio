@@ -4,3 +4,4 @@ yfinance
 matplotlib
 scipy
 alpaca-py
+tabulate
