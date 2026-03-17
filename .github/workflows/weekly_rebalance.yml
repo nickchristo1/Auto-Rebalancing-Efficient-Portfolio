@@ -28,4 +28,5 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
-        run: python auto_rebalance.py
+          GMAIL_PASSCODE: ${{ secrets.GMAIL_PASSCODE }}
+        run: python send_report.py
