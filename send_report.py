@@ -18,6 +18,7 @@ filtered_orders = {k: v for k, v in all_orders.items() if v != 0}  # Leave out n
 keys = list(filtered_orders.keys())
 values = list(filtered_orders.values())
 
+plt.clf()
 plt.bar(keys, values)
 plt.xlabel('Ticker')
 plt.ylabel('Order Value')
