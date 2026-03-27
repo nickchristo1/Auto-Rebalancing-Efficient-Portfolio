@@ -70,7 +70,7 @@ rebalance_values = cumulative_growth.loc[rebalance_dates]
 plt.scatter(rebalance_dates, rebalance_values, color='red', zorder=5, label="Rebalance Triggered")
 plt.xlabel("Date")
 plt.ylabel("Cumulative Return")
-plt.title(f"Back-tested Portfolio over Last {backtest_period} Days (Out-of-Sample)\nReturn = "
+plt.title(f"Back-tested Portfolio over Last {backtest_period} Days (Out-of-Sample)\n Strategy Return = "
           f"{(cumulative_growth.iloc[-1] - 1)*100:.2f}%")
 plt.grid(True)
 plt.legend()
