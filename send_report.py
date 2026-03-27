@@ -12,8 +12,9 @@ from datetime import date
 
 
 # 1.) Generate image of position adjustments
+sell_orders = {k: -v for k, v in sell_orders.items()}  # Make sell orders negative
 all_orders = buy_orders | sell_orders
-print(all_orders)
+
 filtered_orders = {k: v for k, v in all_orders.items() if v != 0}  # Leave out non-adjusted positions
 
 keys = list(filtered_orders.keys())
