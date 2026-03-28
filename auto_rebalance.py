@@ -25,7 +25,7 @@ current_positions = client.get_all_positions()
 
 # Get total portfolio value
 total_portfolio_value = float(account.equity)
-cash_buffer = 0.995  # Leave 2% to account for trading costs/slippage and do not exceed your buying power
+cash_buffer = 0.99  # Leave buffer for trading costs/slippage and do not exceed your buying power
 total_allocatable_cash = total_portfolio_value * cash_buffer
 
 # Calculate how much we want in each asset after rebalance
