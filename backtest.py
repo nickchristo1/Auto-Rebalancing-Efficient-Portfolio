@@ -74,6 +74,7 @@ plt.title(f"Back-tested Portfolio over Last {backtest_period} Days (Out-of-Sampl
           f"{(cumulative_growth.iloc[-1] - 1)*100:.2f}%")
 plt.grid(True)
 plt.legend()
+plt.style.use('seaborn-v0_8')
 plt.show()
 
 

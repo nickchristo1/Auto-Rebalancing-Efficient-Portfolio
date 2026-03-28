@@ -34,12 +34,14 @@ ax.set_title(f'Position Adjustments for Week Starting on {date.today()}')
 
 plt.xticks(rotation=45)
 plt.tight_layout()
+plt.style.use('seaborn-v0_8')
 
 # 2.) Save image and prepare for entry in report
 image_buffer = io.BytesIO()
 fig.savefig(image_buffer, format='png')  # Save image to buffer
 image_buffer.seek(0)
 plt.close(fig)
+
 
 
 # 3.) Function to send email of report

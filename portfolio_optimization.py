@@ -93,6 +93,7 @@ plt.ylabel("Expected Return")
 plt.title("Sample Efficient Frontier Based on Shrinkage Estimates of ∑ using PCA")
 plt.grid(True)
 plt.legend()
+plt.style.use('seaborn-v0_8')
 # plt.show()
 
 
