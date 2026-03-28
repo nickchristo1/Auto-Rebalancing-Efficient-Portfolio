@@ -21,24 +21,32 @@ keys = list(filtered_orders.keys())
 values = list(filtered_orders.values())
 
 plt.clf()
-plt.bar(keys, values)
-plt.xlabel('Ticker')
-plt.ylabel('Order Value')
-plt.title('Position Adjustments')
+
+colors = ['red' if v < 0 else 'blue' for v in values]  # Color coding for buy vs. sell
+fig, ax = plt.subplots(figsize=(10, 6))
+bars = ax.bar(keys, values, color=colors)
+ax.bar_label(bars, padding=3, fmt='%.2f')
+ax.axhline(0, color='black', linewidth=0.8)
+
+ax.set_xlabel('Ticker')
+ax.set_ylabel('Order Value ($)')
+ax.set_title(f'Position Adjustments for Week Starting on {date.today()}')
+
 plt.xticks(rotation=45)
 plt.tight_layout()
 
 # 2.) Save image and prepare for entry in report
 image_buffer = io.BytesIO()
-plt.savefig(image_buffer, format='png')  # Save image to buffer
-plt.close()
+fig.savefig(image_buffer, format='png')  # Save image to buffer
+image_buffer.seek(0)
+plt.close(fig)
 
 
 # 3.) Function to send email of report
 
 def send_email(sender_email, sender_password, recipient_email, body_text, image_bytes):
     msg = EmailMessage()
-    msg['Subject'] = f"Auto-Rebalance Report on {date.today()}"
+    msg['Subject'] = f"Auto-Rebalance Report for Week Starting on {date.today()}"
     msg['From'] = sender_email
     msg['To'] = recipient_email
 

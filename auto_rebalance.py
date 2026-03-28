@@ -97,9 +97,9 @@ def create_order(ticker, action, dollar_amount):
         time_in_force=TimeInForce.DAY
     )
 
-    order = client.submit_order(market_order)
+    client.submit_order(market_order)
     print(f"\nSubmitted order:\nTicker: {ticker}\nSide: {action}\nAmount: ${dollar_amount:.2f}"
-          f"\nWeight: {100*dollar_amount/total_portfolio_value:.3f}%\n\nOrder: {order}", "-"*80)
+          f"\nWeight: {100*dollar_amount/total_portfolio_value:.3f}%\n", "-"*80)
 
 
 net_traded_dollars = 0  # Cumulative sum of dollars traded (selling -> negative; buying -> positive)
