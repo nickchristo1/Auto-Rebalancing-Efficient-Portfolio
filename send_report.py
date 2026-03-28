@@ -43,7 +43,6 @@ image_buffer.seek(0)
 plt.close(fig)
 
 
-
 # 3.) Function to send email of report
 
 def send_email(sender_email, sender_password, recipient_email, body_text, image_bytes):
