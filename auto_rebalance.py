@@ -107,8 +107,12 @@ net_traded_dollars = 0  # Cumulative sum of dollars traded (selling -> negative;
 # Execute Sell Orders
 for ticker in sell_orders.keys():
     dollar_amount = sell_orders[ticker]
-    net_traded_dollars -= dollar_amount
-    create_order(ticker, "sell", dollar_amount)
+
+    held_value = float(client.get_open_position(ticker).market_value) * .999
+    final_sell_amount = min(dollar_amount, held_value)
+
+    net_traded_dollars -= final_sell_amount
+    create_order(ticker, "sell", final_sell_amount)
 
 # Execute Buy Orders
 for ticker in buy_orders.keys():
