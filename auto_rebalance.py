@@ -13,7 +13,7 @@ api_secret = os.getenv('ALPACA_SECRET_KEY')
 
 
 # Create a paper trading client
-client = TradingClient(api_key, api_secret, paper=True)
+client = TradingClient(api_key, api_secret, paper=False)
 
 
 # 1.) Get Current Portfolio Information and Determine the Weight Adjustments
