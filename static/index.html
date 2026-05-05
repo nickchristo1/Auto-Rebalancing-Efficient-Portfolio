@@ -140,9 +140,13 @@ async function loadData() {
         const tbody = document.querySelector("#positions tbody");
         tbody.innerHTML = "";
 
-        const labels = data.history.map(x =>
+        const history = data.history || [];
+
+        const labels = history.map(x =>
             new Date(x.timestamp * 1000).toLocaleDateString()
         );
+
+        const values = history.map(x => x.equity);
 
         const values = data.history.map(x => x.equity);
 
@@ -150,7 +154,7 @@ async function loadData() {
             equityChart.destroy();
         }
 
-        const a = data.analytics;
+        const a = data.analytics || {};
 
         document.getElementById("analytics").innerHTML = `
             Max Drawdown: ${(a.max_drawdown * 100).toFixed(2)}%<br>
@@ -185,7 +189,7 @@ async function loadData() {
             }
         });
 
-        data.positions.forEach(p => {
+        (data.positions || []).forEach(p => {
             const color = p.unrealized_pl >= 0 ? "green" : "red";
             const todayColor = p.today_pl >= 0 ? "green" : "red";
 
