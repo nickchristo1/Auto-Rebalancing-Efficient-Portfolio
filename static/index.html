@@ -121,6 +121,8 @@ let equityChart = null;
 
 async function loadData() {
     try {
+        let scrollY = window.scrollY;
+
         const res = await fetch("/api/portfolio");
         const data = await res.json();
 
@@ -207,6 +209,8 @@ async function loadData() {
 
         document.getElementById("updated").innerText =
             "Last updated: " + new Date().toLocaleTimeString();
+
+        window.scrollTo(0, scrollY);
 
     } catch (err) {
         console.log(err);
