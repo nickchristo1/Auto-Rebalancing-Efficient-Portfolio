@@ -3,6 +3,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from alpaca.trading.client import TradingClient
 from dotenv import load_dotenv
 from alpaca.trading.requests import GetPortfolioHistoryRequest
@@ -22,6 +23,11 @@ trading_client = TradingClient(api_key, secret_key, paper=True)
 # --- Optional static frontend ---
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/static/index.html")
 
 
 @app.get("/api/portfolio")
