@@ -18,7 +18,7 @@ load_dotenv()
 
 app = FastAPI()
 
-initial_capital = 3900
+initial_capital = 6285
 
 # --- Alpaca Client ---
 api_key = os.getenv("ALPACA_API_KEY")
