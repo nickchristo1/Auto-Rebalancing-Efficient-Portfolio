@@ -2,6 +2,7 @@
 
 import os
 import numpy as np
+import math
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -32,12 +33,33 @@ spy_request = StockBarsRequest(
     limit=30
 )
 
-spy_bars = data_client.get_stock_bars(spy_request).df
-spy_bars = spy_bars.reset_index()
+
+def get_spy_data():
+    try:
+        spy_request = StockBarsRequest(
+            symbol_or_symbols="SPY",
+            timeframe=TimeFrame.Day,
+            limit=30
+        )
+        spy_bars = data_client.get_stock_bars(spy_request).df
+        spy_bars = spy_bars.reset_index()
+        return spy_bars
+    except:
+        return None
+
 
 # --- Optional static frontend ---
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# --- Avoid Crashes ---
+def safe_float(x):
+    if x is None:
+        return 0.0
+    if isinstance(x, float) and (math.isnan(x) or math.isinf(x)):
+        return 0.0
+    return float(x)
 
 
 @app.get("/")
@@ -57,8 +79,16 @@ async def get_portfolio():
     history = trading_client.get_portfolio_history(history_request)
 
     # Calculate SPY vs. Strategy Returns
-    portfolio_equity = np.array(history.equity)
+    portfolio_equity = np.array(history.equity) if len(history.equity) > 1 else np.array([initial_capital])
     portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
+
+    spy_bars = get_spy_data()
+    if spy_bars is None or len(spy_bars) < 2:
+        spy_prices = np.array([1.0, 1.0])
+        spy_returns = np.array([0.0])
+    else:
+        spy_prices = spy_bars["close"].values
+        spy_returns = np.diff(spy_prices) / spy_prices[:-1]
 
     spy_prices = spy_bars["close"].values
     spy_returns = np.diff(spy_prices) / spy_prices[:-1]
@@ -107,19 +137,37 @@ async def get_portfolio():
 
     # Advanced Analytics
     running_max = np.maximum.accumulate(portfolio_equity)
+    running_max = np.where(running_max == 0, 1e-8, running_max)
+
     drawdown = (portfolio_equity - running_max) / running_max
-    max_drawdown = drawdown.min()
+    max_drawdown = np.min(drawdown)
 
-    var_99 = np.percentile(portfolio_returns, 1)
+    strategy_vol = np.std(portfolio_returns) if len(portfolio_returns) > 1 else 0.0
+    spy_vol = np.std(spy_returns) if len(spy_returns) > 1 else 0.0
 
-    strategy_return = (portfolio_equity[-1] / portfolio_equity[0]) - 1
-    spy_return = (spy_prices[-1] / spy_prices[0]) - 1
+    strategy_return = (portfolio_equity[-1] / portfolio_equity[0]) - 1 if len(portfolio_equity) > 1 else 0.0
+    spy_return = (spy_prices[-1] / spy_prices[0]) - 1 if len(spy_prices) > 1 else 0.0
+
     alpha = strategy_return - spy_return
 
-    strategy_vol = np.std(portfolio_returns)
-    spy_vol = np.std(spy_returns)
+    mean_ret = np.mean(portfolio_returns) if len(portfolio_returns) > 1 else 0.0
+    std_ret = np.std(portfolio_returns) if len(portfolio_returns) > 1 else 1e-8
+    std_ret = max(std_ret, 1e-6)
 
-    sharpe = (np.mean(portfolio_returns) / (np.std(portfolio_returns) + 1e-8)) * np.sqrt(252)
+    sharpe = (mean_ret / (std_ret + 1e-8)) * np.sqrt(252)
+
+    var_99 = np.percentile(portfolio_returns, 1) if len(portfolio_returns) > 1 else 0.0
+
+    analytics = {
+        "max_drawdown": safe_float(max_drawdown),
+        "var_99": safe_float(var_99),
+        "strategy_return": safe_float(strategy_return),
+        "spy_return": safe_float(spy_return),
+        "alpha": safe_float(alpha),
+        "strategy_vol": safe_float(strategy_vol),
+        "spy_vol": safe_float(spy_vol),
+        "sharpe": safe_float(sharpe)
+    }
 
     return {
         "equity": equity,
@@ -128,14 +176,5 @@ async def get_portfolio():
         "percent_return": percent_return,
         "positions": positions_data,
         "history": chart_data,
-        "analytics": {
-            "max_drawdown": float(max_drawdown),
-            "var_99": float(var_99),
-            "strategy_return": float(strategy_return),
-            "spy_return": float(spy_return),
-            "alpha": float(alpha),
-            "strategy_vol": float(strategy_vol),
-            "spy_vol": float(spy_vol),
-            "sharpe": float(sharpe)
-        }
+        "analytics": analytics
     }
