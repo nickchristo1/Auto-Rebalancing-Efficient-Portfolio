@@ -83,11 +83,10 @@ async def get_portfolio():
         spy_prices = np.array([1.0, 1.0])
         spy_returns = np.array([0.0])
     else:
-        spy_prices = spy_bars["Close"].values
-        spy_returns = np.diff(spy_prices) / spy_prices[:-1]
-
-    spy_prices = spy_bars["close"].values
-    spy_returns = np.diff(spy_prices) / spy_prices[:-1]
+        spy_prices = spy_bars["Close"]
+        spy_prices = np.asarray(spy_prices).reshape(-1)
+        spy_prices = np.nan_to_num(spy_prices, nan=1.0)
+        spy_returns = np.diff(spy_prices) / np.where(spy_prices[:-1] == 0, 1e-8, spy_prices[:-1])
 
     # Account information
     equity = float(account.equity)
