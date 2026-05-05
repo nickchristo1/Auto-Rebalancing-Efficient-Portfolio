@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Auto-Rebalance MVO Portfolio Dashboard</title>
+
+    <style>
+        body {
+            font-family: -apple-system, Times;
+            margin: 15px;
+            background: #0d1117;
+            color: white;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: #161b22;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 0 8px rgba(0,0,0,.3);
+        }
+
+        .label {
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .value {
+            font-size: 24px;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .green { color: #2ecc71; }
+        .red { color: #ff5c5c; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 8px;
+            font-size: 13px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+
+        #updated {
+            margin-top: 10px;
+            font-size: 11px;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Weekly Auto-Rebalance MVO Portfolio Dashboard</h2>
+
+<div class="card">
+    <div class="label">Total Equity</div>
+    <div class="value" id="equity">-</div>
+</div>
+
+<div class="card">
+    <div class="label">Daily PnL</div>
+    <div class="value" id="pnl">-</div>
+</div>
+
+<div class="card">
+    <div class="label">Portfolio Return</div>
+    <div class="value" id="percent_return">-</div>
+</div>
+
+<div class="card">
+    <div class="label">1 Month Portfolio Value</div>
+    <canvas id="equityChart"></canvas>
+</div>
+
+<div class="card">
+    <div class="label">Open Positions</div>
+    <table id="positions">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Qty</th>
+                <th>P/L</th>
+                <th>%</th>
+                <th>Today</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div id="updated">Last updated: --</div>
+
+<script>
+function money(x) {
+    return "$" + Number(x).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2});
+}
+
+function pct(x) {
+    return (x >= 0 ? "+" : "") + Number(x).toFixed(2) + "%";
+}
+
+let equityChart = null;
+
+async function loadData() {
+    try {
+        const res = await fetch("/api/portfolio");
+        const data = await res.json();
+
+        document.getElementById("equity").innerText = money(data.equity);
+
+        const pnlEl = document.getElementById("pnl");
+
+        const pnlText = `${money(data.pnl_daily)} (${pct(data.daily_return_pct)})`;
+
+        pnlEl.innerText = pnlText;
+        pnlEl.className = "value " + (data.pnl_daily >= 0 ? "green" : "red");
+
+        const retEl = document.getElementById("percent_return");
+        retEl.innerText = pct(data.percent_return);
+        retEl.className = "value " + (data.percent_return >= 0 ? "green" : "red");
+
+        const tbody = document.querySelector("#positions tbody");
+        tbody.innerHTML = "";
+
+        const labels = data.history.map(x =>
+            new Date(x.timestamp * 1000).toLocaleDateString()
+        );
+
+        const values = data.history.map(x => x.equity);
+
+        if (equityChart) {
+            equityChart.destroy();
+        }
+
+        const ctx = document.getElementById("equityChart").getContext("2d");
+
+        equityChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Equity",
+                    data: values,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        data.positions.forEach(p => {
+            const color = p.unrealized_pl >= 0 ? "green" : "red";
+            const todayColor = p.today_pl >= 0 ? "green" : "red";
+
+            const row = `
+                <tr>
+                    <td>${p.symbol}</td>
+                    <td>${p.qty}</td>
+                    <td class="${color}">${money(p.unrealized_pl)}</td>
+                    <td class="${color}">${pct(p.return_pct)}</td>
+                    <td class="${todayColor}">
+                        ${money(p.today_pl)} (${pct(p.today_return_pct)})
+                    </td>
+                </tr>
+             `;
+            tbody.innerHTML += row;
+        });
+
+        document.getElementById("updated").innerText =
+            "Last updated: " + new Date().toLocaleTimeString();
+
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+loadData();
+setInterval(loadData, 15000);
+</script>
+
+</body>
+</html>
