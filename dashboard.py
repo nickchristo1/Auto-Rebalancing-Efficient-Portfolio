@@ -24,7 +24,7 @@ initial_capital = 3900
 api_key = os.getenv("ALPACA_API_KEY")
 secret_key = os.getenv("ALPACA_SECRET_KEY")
 
-trading_client = TradingClient(api_key, secret_key, paper=True)
+trading_client = TradingClient(api_key, secret_key, paper=False)
 data_client = StockHistoricalDataClient(api_key, secret_key)
 
 # --- SPY Data for comparison to strategy ---
