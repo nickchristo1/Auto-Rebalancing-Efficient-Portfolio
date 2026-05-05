@@ -12,6 +12,7 @@ from alpaca.trading.requests import GetPortfolioHistoryRequest
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
+import yfinance as yf
 
 load_dotenv()
 
@@ -36,14 +37,9 @@ spy_request = StockBarsRequest(
 
 def get_spy_data():
     try:
-        spy_request = StockBarsRequest(
-            symbol_or_symbols="SPY",
-            timeframe=TimeFrame.Day,
-            limit=30
-        )
-        spy_bars = data_client.get_stock_bars(spy_request).df
-        spy_bars = spy_bars.reset_index()
-        return spy_bars
+        spy = yf.download("SPY", period="1mo", interval="1d")
+        spy = spy.reset_index()
+        return spy
     except:
         return None
 
@@ -87,7 +83,7 @@ async def get_portfolio():
         spy_prices = np.array([1.0, 1.0])
         spy_returns = np.array([0.0])
     else:
-        spy_prices = spy_bars["close"].values
+        spy_prices = spy_bars["Close"].values
         spy_returns = np.diff(spy_prices) / spy_prices[:-1]
 
     spy_prices = spy_bars["close"].values
