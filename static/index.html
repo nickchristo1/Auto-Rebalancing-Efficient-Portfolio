@@ -100,6 +100,12 @@
     </table>
 </div>
 
+<div class="card">
+    <div class="label">Analytics (1M)</div>
+
+    <div id="analytics"></div>
+</div>
+
 <div id="updated">Last updated: --</div>
 
 <script>
@@ -143,6 +149,21 @@ async function loadData() {
         if (equityChart) {
             equityChart.destroy();
         }
+
+        const a = data.analytics;
+
+        document.getElementById("analytics").innerHTML = `
+            Max Drawdown: ${(a.max_drawdown * 100).toFixed(2)}%<br>
+            VaR (99%): ${(a.var_99 * 100).toFixed(2)}%<br><br>
+
+            Strategy Return: ${(a.strategy_return * 100).toFixed(2)}%<br>
+            SPY Return: ${(a.spy_return * 100).toFixed(2)}%<br>
+            Alpha: ${(a.alpha * 100).toFixed(2)}%<br><br>
+
+            Volatility (Strategy): ${(a.strategy_vol * 100).toFixed(2)}%<br>
+            Volatility (SPY): ${(a.spy_vol * 100).toFixed(2)}%<br>
+            Sharpe: ${a.sharpe.toFixed(2)}
+        `;
 
         const ctx = document.getElementById("equityChart").getContext("2d");
 
