@@ -82,19 +82,19 @@ async def get_portfolio():
     positions_data = sorted(
         [
             {
+                # Stock Info
                 "symbol": p.symbol,
                 "qty": float(p.qty),
                 "market_value": float(p.market_value),
 
-                # lifetime
+                # Lifetime PnL
                 "unrealized_pl": float(p.unrealized_pl),
                 "return_pct": float(p.unrealized_plpc) * 100,
 
-                # today
+                # Today PnL
                 "today_pl": float(p.unrealized_intraday_pl)
                 if hasattr(p, "unrealized_intraday_pl")
                 else float(p.unrealized_pl),
-
                 "today_return_pct": float(p.unrealized_intraday_plpc) * 100
                 if hasattr(p, "unrealized_intraday_plpc")
                 else float(p.unrealized_plpc) * 100,

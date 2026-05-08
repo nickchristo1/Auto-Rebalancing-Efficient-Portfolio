@@ -90,7 +90,8 @@
         <thead>
             <tr>
                 <th>Symbol</th>
-                <th>Qty</th>
+                <th>Quantity</th>
+                <th>Market Value</th>
                 <th>P/L</th>
                 <th>%</th>
                 <th>Today</th>
@@ -200,6 +201,7 @@ async function loadData() {
                 <tr>
                     <td>${p.symbol}</td>
                     <td>${p.qty}</td>
+                    <td>${p.market_value}</td>
                     <td class="${color}">${money(p.unrealized_pl)}</td>
                     <td class="${color}">${pct(p.return_pct)}</td>
                     <td class="${todayColor}">
