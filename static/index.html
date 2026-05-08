@@ -201,7 +201,7 @@ async function loadData() {
                 <tr>
                     <td>${p.symbol}</td>
                     <td>${p.qty}</td>
-                    <td>${p.market_value}</td>
+                    <td>${money(p.market_value)}</td>
                     <td class="${color}">${money(p.unrealized_pl)}</td>
                     <td class="${color}">${pct(p.return_pct)}</td>
                     <td class="${todayColor}">
