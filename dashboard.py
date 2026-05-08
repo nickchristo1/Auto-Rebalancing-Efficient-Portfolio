@@ -62,12 +62,11 @@ async def get_portfolio():
     portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
 
     spy = yf.download("SPY", period="1mo", interval="1d")["Close"].dropna()
-    spy = spy.reset_index()
     if spy is None or len(spy) < 2:
         spy_prices = np.array([1.0, 1.0])
         spy_returns = np.array([0.0])
     else:
-        spy_prices = np.asarray(spy).reshape(-1)
+        spy_prices = spy.to_numpy().flatten()
         spy_returns = np.diff(spy_prices) / np.where(spy_prices[:-1] == 0, 1e-8, spy_prices[:-1])
 
     # Account information
