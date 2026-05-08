@@ -98,6 +98,9 @@ async def get_portfolio():
                 "today_return_pct": float(p.unrealized_intraday_plpc) * 100
                 if hasattr(p, "unrealized_intraday_plpc")
                 else float(p.unrealized_plpc) * 100,
+
+                # Portfolio Weight
+                "weight": float(p.market_value) / equity
             }
             for p in positions
         ],
