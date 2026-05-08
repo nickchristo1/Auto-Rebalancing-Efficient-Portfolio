@@ -1,7 +1,6 @@
 # Nicholas Christophides  Nick.christophides@gmail.com
 
 import os
-import numpy as np
 import math
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -9,12 +8,31 @@ from fastapi.responses import RedirectResponse
 from alpaca.trading.client import TradingClient
 from dotenv import load_dotenv
 from alpaca.trading.requests import GetPortfolioHistoryRequest
-from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.data.requests import StockBarsRequest
-from alpaca.data.timeframe import TimeFrame
 import yfinance as yf
+import pandas as pd
+import numpy as np
 
-# ----- 1.) Set-up and Initialization -----
+tickers = ['AMT',  # American Tower      Sector: Real Estate
+           'BRK-B',  # Berkshire Hathaway  Sector: Financials
+           'CAT',  # Caterpillar         Sector: Industrials
+           'COST',  # Costco              Sector: Consumer Staples
+           'GE',  # GE Aerospace        Sector: Industrials
+           'HD',  # Home Depot          Sector: Consumer Disc.
+           'JNJ',  # Johnson & Johnson   Sector: Health Care
+           'MSFT',  # Microsoft           Sector: Information Tech
+           'NEE',  # NextEra Energy      Sector: Utilities
+           'NVDA',  # NVIDIA              Sector: Information Tech
+           'PG',  # Proctor & Gamble    Sector: Consumer Staples
+           'PLD',  # Prologis            Sector: Real Estate
+           'SPY',  # S&P 500             Market Index
+           'TSLA',  # Tesla               Sector: Consumer Disc.
+           'UNH',  # UnitedHealth        Sector: Health Care
+           'V',  # Visa                Sector: Financials
+           'XOM']  # ExxonMobil          Sector: Energy
+
+
+# 1.) Set-up and Initialization
+# -----------------------------
 
 load_dotenv()  # Load keys
 app = FastAPI()
@@ -43,8 +61,8 @@ def root():
     return RedirectResponse(url="/static/index.html")
 
 
-# ----- 2.) Dashboard Backend -----
-
+# 2.) Dashboard Backend
+# ---------------------
 
 @app.get("/api/portfolio")
 async def get_portfolio():
@@ -57,9 +75,9 @@ async def get_portfolio():
     )
     history = trading_client.get_portfolio_history(history_request)
 
-    # Calculate SPY vs. Strategy Returns
-    portfolio_equity = np.array(history.equity) if len(history.equity) > 1 else np.array([initial_capital])
-    portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
+    # # Calculate SPY vs. Strategy Returns
+    # portfolio_equity = np.array(history.equity) if len(history.equity) > 1 else np.array([initial_capital])
+    # portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
 
     spy = yf.download("SPY", period="1mo", interval="1d")["Close"].dropna()
     if spy is None or len(spy) < 2:
@@ -116,28 +134,51 @@ async def get_portfolio():
         for i in range(len(history.equity))
     ]
 
-    # Advanced Analytics
-    running_max = np.maximum.accumulate(portfolio_equity)
-    running_max = np.where(running_max == 0, 1e-8, running_max)
+    # Advanced Analytics: 1.) Find historical portfolio performance
+    positions_dict = {  # Get a list of active positions
+        p.symbol: p
+        for p in positions
+    }
 
-    drawdown = (portfolio_equity - running_max) / running_max
+    data = yf.download(tickers, period="1y", auto_adjust=True)["Close"]  # Extracted prices from yfinance
+    data.index = pd.to_datetime(data.index)
+
+    returns = data.pct_change(fill_method=None).dropna()  # Calculate returns of the active positions
+    weights = []  # Get a list of active positions weights
+
+    tickers[1] = "BRK.B"  # Fix name mismatch between Alpaca and yfinance
+    for t in tickers:
+        if t not in positions_dict:  # If no position held in asset, weight should be 0
+            weights.append(0)
+        else:
+            weights.append(float(positions_dict[t].market_value) / equity)  # If held, find weight
+
+    port_daily_rets = returns @ weights  # Daily returns for portfolio
+    portfolio_growth = (1 + port_daily_rets).cumprod()  # Find compounded return
+    strategy_return = portfolio_growth.iloc[-1] - 1  # Portfolio return over the year
+
+    # Advanced Analytics: 2.) Calculate metrics
+    # Drawdown
+    running_max = portfolio_growth.cummax()
+    drawdown = (portfolio_growth - running_max) / running_max
     max_drawdown = np.min(drawdown)
 
-    strategy_vol = np.std(portfolio_returns) if len(portfolio_returns) > 1 else 0.0
+    # Volatility
+    strategy_vol = port_daily_rets.std() * np.sqrt(252)
     spy_vol = np.std(spy_returns) if len(spy_returns) > 1 else 0.0
 
-    strategy_return = (portfolio_equity[-1] / portfolio_equity[0]) - 1 if len(portfolio_equity) > 1 else 0.0
+    # Return
     spy_return = (spy_prices[-1] / spy_prices[0]) - 1 if len(spy_prices) > 1 else 0.0
-
     alpha = strategy_return - spy_return
 
-    mean_ret = np.mean(portfolio_returns) if len(portfolio_returns) > 1 else 0.0
-    std_ret = np.std(portfolio_returns) if len(portfolio_returns) > 1 else 1e-8
+    # Sharpe Ratio
+    mean_ret = np.mean(port_daily_rets)
+    std_ret = np.std(port_daily_rets)
     std_ret = max(std_ret, 1e-6)
-
     sharpe = (mean_ret / (std_ret + 1e-8)) * np.sqrt(252)
 
-    var_99 = np.percentile(portfolio_returns, 1) if len(portfolio_returns) > 1 else 0.0
+    # VaR
+    var_99 = np.percentile(port_daily_rets, 1)
 
     analytics = {
         "max_drawdown": safe_float(max_drawdown),
