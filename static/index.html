@@ -135,9 +135,12 @@ async function loadData() {
         pnlEl.innerText = pnlText;
         pnlEl.className = "value " + (data.pnl_daily >= 0 ? "green" : "red");
 
-        const retEl = document.getElementById("percent_return");
-        retEl.innerText = pct(data.percent_return);
-        retEl.className = "value " + (data.percent_return >= 0 ? "green" : "red");
+        const retEl = document.getElementById("cum_percent_return");
+
+        const retText = '${money(data.cum_return)} (${pct(data.cum_percent_return)})';
+
+        retEl.innerText = retText;
+        retEl.className = "value " + (data.cum_percent_return >= 0 ? "green" : "red");
 
         const tbody = document.querySelector("#positions tbody");
         tbody.innerHTML = "";

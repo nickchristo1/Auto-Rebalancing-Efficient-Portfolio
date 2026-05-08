@@ -14,42 +14,22 @@ from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 import yfinance as yf
 
-load_dotenv()
+# ----- 1.) Set-up and Initialization -----
 
+load_dotenv()  # Load keys
 app = FastAPI()
-
-initial_capital = 6285
 
 # --- Alpaca Client ---
 api_key = os.getenv("ALPACA_API_KEY")
 secret_key = os.getenv("ALPACA_SECRET_KEY")
-
 trading_client = TradingClient(api_key, secret_key, paper=False)
-data_client = StockHistoricalDataClient(api_key, secret_key)
 
-# --- SPY Data for comparison to strategy ---
-spy_request = StockBarsRequest(
-    symbol_or_symbols="SPY",
-    timeframe=TimeFrame.Day,
-    limit=30
-)
-
-
-def get_spy_data():
-    try:
-        spy = yf.download("SPY", period="1mo", interval="1d")
-        spy = spy.reset_index()
-        return spy
-    except:
-        return None
-
-
-# --- Optional static frontend ---
-if os.path.isdir("static"):
+if os.path.isdir("static"):  # Static frontend
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
+initial_capital = 6285
 
-# --- Avoid Crashes ---
+
 def safe_float(x):
     if x is None:
         return 0.0
@@ -61,6 +41,9 @@ def safe_float(x):
 @app.get("/")
 def root():
     return RedirectResponse(url="/static/index.html")
+
+
+# ----- 2.) Dashboard Backend -----
 
 
 @app.get("/api/portfolio")
@@ -78,23 +61,24 @@ async def get_portfolio():
     portfolio_equity = np.array(history.equity) if len(history.equity) > 1 else np.array([initial_capital])
     portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
 
-    spy_bars = get_spy_data()
-    if spy_bars is None or len(spy_bars) < 2:
+    spy = yf.download("SPY", period="1mo", interval="1d")["Close"].dropna()
+    spy = spy.reset_index()
+    if spy is None or len(spy) < 2:
         spy_prices = np.array([1.0, 1.0])
         spy_returns = np.array([0.0])
     else:
-        spy_prices = spy_bars["Close"]
-        spy_prices = np.asarray(spy_prices).reshape(-1)
-        spy_prices = np.nan_to_num(spy_prices, nan=1.0)
+        spy_prices = np.asarray(spy).reshape(-1)
         spy_returns = np.diff(spy_prices) / np.where(spy_prices[:-1] == 0, 1e-8, spy_prices[:-1])
 
     # Account information
-    equity = float(account.equity)
-    last_equity = float(account.last_equity)
+    equity = float(account.equity)  # Total assets summed
+    last_equity = float(account.last_equity)  # Yesterday's final summed assets
 
-    pnl_daily = equity - last_equity
-    daily_return_pct = (pnl_daily / last_equity) * 100 if last_equity != 0 else 0
-    percent_return = ((equity - initial_capital) / initial_capital) * 100
+    # PnL Metrics
+    pnl_daily = equity - last_equity  # Today PnL
+    daily_return_pct = (pnl_daily / last_equity) * 100 if last_equity != 0 else 0  # PnL in %
+    cum_return = equity - initial_capital  # Cumulative return
+    cum_percent_return = (cum_return / initial_capital) * 100  # Cumulative return in %
 
     positions_data = sorted(
         [
@@ -168,7 +152,8 @@ async def get_portfolio():
         "equity": equity,
         "pnl_daily": equity - last_equity,
         "daily_return_pct": daily_return_pct,
-        "percent_return": percent_return,
+        "cum_return": cum_return,
+        "cum_percent_return": cum_percent_return,
         "positions": positions_data,
         "history": chart_data,
         "analytics": analytics
