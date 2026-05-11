@@ -302,6 +302,12 @@ async function loadData() {
             </div>
         `;
 
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+
+    const yMin = Math.floor(minValue / 500) * 500;
+    const yMax = Math.ceil(maxValue / 500) * 500;
+
     const ctx = document.getElementById("equityChart").getContext("2d");
 
     equityChart = new Chart(ctx, {
@@ -318,6 +324,12 @@ async function loadData() {
             responsive: true,
             plugins: {
                 legend: { display: false }
+            },
+            scales: {
+                y: {
+                    min: yMin,
+                    max: yMax
+                }
             }
         }
     });
