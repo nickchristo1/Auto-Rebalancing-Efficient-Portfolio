@@ -307,8 +307,8 @@ async function loadData() {
     const minValue = Math.min(...nonZeroValues);
     const maxValue = Math.max(...nonZeroValues);
 
-    const yMin = Math.floor(minValue / 500) * 500;
-    const yMax = Math.ceil(maxValue / 500) * 500;
+    const yMin = Math.floor(minValue / 200) * 200;
+    const yMax = Math.ceil(maxValue / 200) * 200;
 
     const ctx = document.getElementById("equityChart").getContext("2d");
 
