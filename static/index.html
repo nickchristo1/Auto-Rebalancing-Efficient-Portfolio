@@ -196,6 +196,12 @@ async function loadData() {
             new Date(x.timestamp * 1000).toLocaleDateString()
         );
 
+        const values = history.map(x => x.equity);
+
+        if (equityChart) {
+            equityChart.destroy();
+        }
+
         const a = data.analytics || {};
 
         document.getElementById("analytics").innerHTML = `
@@ -264,10 +270,51 @@ async function loadData() {
         </div>
     `;
 
-        document.getElementById("updated").innerText =
-            "Last updated: " + new Date().toLocaleTimeString();
+    const ctx = document.getElementById("equityChart").getContext("2d");
 
-        window.scrollTo(0, scrollY);
+    equityChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Equity",
+                data: values,
+                tension: 0.25
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    (data.positions || []).forEach(p => {
+        const color = p.unrealized_pl >= 0 ? "green" : "red";
+        const todayColor = p.today_pl >= 0 ? "green" : "red";
+
+        const row = `
+            <tr>
+                <td>${p.symbol}</td>
+                <td>${p.qty}</td>
+                <td>${money(p.market_value)}</td>
+                <td>${pct((p.market_value / data.equity) * 100)}</td>
+                <td class="${color}">${money(p.unrealized_pl)}</td>
+                <td class="${color}">${pct(p.return_pct)}</td>
+                <td class="${todayColor}">
+                    ${money(p.today_pl)} (${pct(p.today_return_pct)})
+                </td>
+            </tr>
+        `;
+
+        tbody.innerHTML += row;
+    });
+
+    document.getElementById("updated").innerText =
+        "Last updated: " + new Date().toLocaleTimeString();
+
+    window.scrollTo(0, scrollY);
 
     } catch (err) {
         console.log(err);
