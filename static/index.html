@@ -302,7 +302,9 @@ async function loadData() {
             </div>
         `;
 
-    const minValue = Math.min(values);
+    const nonZeroValues = values.filter(v => v > 0);
+
+    const minValue = Math.min(nonZeroValues);
     const maxValue = Math.max(values);
 
     const yMin = Math.floor(minValue / 500) * 500;
