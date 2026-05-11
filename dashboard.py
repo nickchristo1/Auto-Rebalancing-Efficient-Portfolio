@@ -144,18 +144,34 @@ async def get_portfolio():
     data.index = pd.to_datetime(data.index)
 
     returns = data.pct_change(fill_method=None).dropna()  # Calculate returns of the active positions
-    weights = []  # Get a list of active positions weights
+    # weights = []
+    weights = pd.Series(0.0, index=data.columns)
 
-    tickers[1] = "BRK.B"  # Fix name mismatch between Alpaca and yfinance
+    # tickers[1] = "BRK.B"  # Fix name mismatch between Alpaca and yfinance
+    yf_map = {"BRK-B": "BRK.B"}  # Fix name mismatch between Alpaca and yfinance
+
+    # yf_tickers = [yf_map.get(t, t) for t in tickers]
+
     for t in tickers:
-        if t not in positions_dict:  # If no position held in asset, weight should be 0
-            weights.append(0)
-        else:
-            weights.append(float(positions_dict[t].market_value) / equity)  # If held, find weight
+        yf_t = yf_map.get(t, t)
+
+        if yf_t in positions_dict:
+            weights[yf_t] = float(positions_dict[t].market_value) / equity
+
+    # for t in tickers:
+    #     if t not in positions_dict:  # If no position held in asset, weight should be 0
+    #         weights.append(0)
+    #     else:
+    #         weights.append(float(positions_dict[t].market_value) / equity)  # If held, find weight
 
     port_daily_rets = returns @ weights  # Daily returns for portfolio
-    portfolio_growth = (1 + port_daily_rets).cumprod()  # Find compounded return
-    strategy_return = portfolio_growth.iloc[-1] - 1  # Portfolio return over the year
+
+    if port_daily_rets.empty:
+        strategy_return = 0.0
+        portfolio_growth = pd.Series([1.0])
+    else:
+        portfolio_growth = (1 + port_daily_rets).cumprod()  # Find compounded return
+        strategy_return = portfolio_growth.iloc[-1] - 1  # Portfolio return over the year
 
     # Advanced Analytics: 2.) Calculate metrics
     # Drawdown
@@ -178,7 +194,7 @@ async def get_portfolio():
     sharpe = (mean_ret / (std_ret + 1e-8)) * np.sqrt(252)
 
     # VaR
-    var_99 = np.percentile(port_daily_rets, 1)
+    var_99 = np.percentile(port_daily_rets, 1) if len(port_daily_rets) > 1 else 0.0
 
     analytics = {
         "max_drawdown": safe_float(max_drawdown),
