@@ -146,7 +146,7 @@
 </div>
 
 <div class="card">
-    <div class="label">Analytics (1M)</div>
+    <div class="label">Analytics (Annualized to 1 Year)</div>
 
     <div id="analytics" class="analytics-grid"></div>
 </div>
@@ -240,35 +240,49 @@ async function loadData() {
                     <span class="metric-name">VaR (99%)</span>
                     <span class="metric-value">
                         ${(a.var_99 * 100).toFixed(2)}%
-                </span>
-            </div>
-        </div>
-
-        <div class="analytics-box">
-            <div class="analytics-title">SPY Benchmark</div>
-
-            <div class="metric">
-                <span class="metric-name">SPY Return</span>
-                <span class="metric-value">
-                    ${(a.spy_return * 100).toFixed(2)}%
-                </span>
+                    </span>
+                </div>
             </div>
 
-            <div class="metric">
-                <span class="metric-name">SPY Volatility</span>
-                <span class="metric-value">
-                    ${(a.spy_vol * 100).toFixed(2)}%
-                </span>
-            </div>
+            <div class="analytics-box">
+                <div class="analytics-title">SPY Benchmark</div>
 
-            <div class="metric">
-                <span class="metric-name">Alpha</span>
-                <span class="metric-value">
-                    ${(a.alpha * 100).toFixed(2)}%
-                </span>
+                <div class="metric">
+                    <span class="metric-name">Return</span>
+                    <span class="metric-value">
+                        ${(a.spy_return * 100).toFixed(2)}%
+                    </span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-name">Volatility</span>
+                    <span class="metric-value">
+                        ${(a.spy_vol * 100).toFixed(2)}%
+                    </span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-name">Sharpe Ratio</span>
+                    <span class="metric-value">
+                        ${a.spy_sharpe.toFixed(2)}
+                    </span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-name">Max Drawdown</span>
+                    <span class="metric-value">
+                        ${(a.spy_max_drawdown * 100).toFixed(2)}%
+                    </span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-name">VaR (99%)</span>
+                    <span class="metric-value">
+                        ${(a.spy_var_99 * 100).toFixed(2)}%
+                    </span>
+                </div>
             </div>
-        </div>
-    `;
+        `;
 
     const ctx = document.getElementById("equityChart").getContext("2d");
 

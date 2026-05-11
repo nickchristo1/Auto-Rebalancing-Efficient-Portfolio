@@ -160,10 +160,16 @@ async def get_portfolio():
         strategy_return = portfolio_growth.iloc[-1] - 1  # Portfolio return over the year
 
     # Advanced Analytics: 2.) Calculate metrics
-    # Drawdown
+    # Drawdown (Strategy)
     running_max = portfolio_growth.cummax()
     drawdown = (portfolio_growth - running_max) / running_max
     max_drawdown = np.min(drawdown)
+
+    # Drawdown (SPY)
+    spy_growth = np.cumprod(1+spy_returns)  # SPY compounded return
+    spy_running_max = np.maximum.accumulate(spy_growth)
+    spy_drawdown = (spy_growth - spy_running_max) / spy_running_max
+    spy_max_drawdown = np.min(spy_drawdown)
 
     # Volatility
     strategy_vol = port_daily_rets.std() * np.sqrt(252)
@@ -171,26 +177,33 @@ async def get_portfolio():
 
     # Return
     spy_return = (spy_prices[-1] / spy_prices[0]) - 1 if len(spy_prices) > 1 else 0.0
-    alpha = strategy_return - spy_return
 
-    # Sharpe Ratio
+    # Sharpe Ratio (Strategy)
     mean_ret = np.mean(port_daily_rets)
     std_ret = np.std(port_daily_rets)
     std_ret = max(std_ret, 1e-6)
     sharpe = (mean_ret / (std_ret + 1e-8)) * np.sqrt(252)
 
+    # Sharpe Ratio (SPY)
+    spy_mean_ret = np.mean(spy_returns)
+    spy_std_ret = np.maximum(np.std(spy_returns), 1e-6)
+    spy_sharpe = (spy_mean_ret / (spy_std_ret + 1e-8)) * np.sqrt(252)
+
     # VaR
     var_99 = np.percentile(port_daily_rets, 1) if len(port_daily_rets) > 1 else 0.0
+    spy_var_99 = np.percentile(spy_returns, 1) if len(spy_returns) > 1 else 0.0
 
     analytics = {
         "max_drawdown": safe_float(max_drawdown),
         "var_99": safe_float(var_99),
         "strategy_return": safe_float(strategy_return),
         "spy_return": safe_float(spy_return),
-        "alpha": safe_float(alpha),
         "strategy_vol": safe_float(strategy_vol),
         "spy_vol": safe_float(spy_vol),
-        "sharpe": safe_float(sharpe)
+        "sharpe": safe_float(sharpe),
+        "spy_sharpe": safe_float(spy_sharpe),
+        "spy_var_99": safe_float(spy_var_99),
+        "spy_max_drawdown": safe_float(spy_max_drawdown)
     }
 
     return {
