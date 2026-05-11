@@ -57,6 +57,49 @@
             font-size: 11px;
             color: gray;
         }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .analytics-box {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .analytics-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #58a6ff;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .metric-name {
+            color: #8b949e;
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 800px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -105,7 +148,7 @@
 <div class="card">
     <div class="label">Analytics (1M)</div>
 
-    <div id="analytics"></div>
+    <div id="analytics" class="analytics-grid"></div>
 </div>
 
 <div id="updated">Last updated: --</div>
@@ -153,66 +196,73 @@ async function loadData() {
             new Date(x.timestamp * 1000).toLocaleDateString()
         );
 
-        const values = history.map(x => x.equity);
-
-        if (equityChart) {
-            equityChart.destroy();
-        }
-
         const a = data.analytics || {};
 
         document.getElementById("analytics").innerHTML = `
-            Max Drawdown: ${(a.max_drawdown * 100).toFixed(2)}%<br>
-            VaR (99%): ${(a.var_99 * 100).toFixed(2)}%<br><br>
+            <div class="analytics-box">
+                <div class="analytics-title">Strategy Metrics</div>
 
-            Strategy Return: ${(a.strategy_return * 100).toFixed(2)}%<br>
-            SPY Return: ${(a.spy_return * 100).toFixed(2)}%<br>
-            Alpha: ${(a.alpha * 100).toFixed(2)}%<br><br>
+                <div class="metric">
+                    <span class="metric-name">Return</span>
+                    <span class="metric-value">
+                        ${(a.strategy_return * 100).toFixed(2)}%
+                    </span>
+                </div>
 
-            Volatility (Strategy): ${(a.strategy_vol * 100).toFixed(2)}%<br>
-            Volatility (SPY): ${(a.spy_vol * 100).toFixed(2)}%<br>
-            Sharpe: ${a.sharpe.toFixed(2)}
-        `;
+                <div class="metric">
+                    <span class="metric-name">Volatility</span>
+                    <span class="metric-value">
+                    ${(a.strategy_vol * 100).toFixed(2)}%
+                    </span>
+                </div>
 
-        const ctx = document.getElementById("equityChart").getContext("2d");
+                <div class="metric">
+                    <span class="metric-name">Sharpe Ratio</span>
+                    <span class="metric-value">
+                        ${a.sharpe.toFixed(2)}
+                    </span>
+                </div>
 
-        equityChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Equity",
-                    data: values,
-                    tension: 0.25
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-        });
+                <div class="metric">
+                    <span class="metric-name">Max Drawdown</span>
+                    <span class="metric-value">
+                        ${(a.max_drawdown * 100).toFixed(2)}%
+                    </span>
+                </div>
 
-        (data.positions || []).forEach(p => {
-            const color = p.unrealized_pl >= 0 ? "green" : "red";
-            const todayColor = p.today_pl >= 0 ? "green" : "red";
+                <div class="metric">
+                    <span class="metric-name">VaR (99%)</span>
+                    <span class="metric-value">
+                        ${(a.var_99 * 100).toFixed(2)}%
+                </span>
+            </div>
+        </div>
 
-            const row = `
-                <tr>
-                    <td>${p.symbol}</td>
-                    <td>${p.qty}</td>
-                    <td>${money(p.market_value)}</td>
-                    <td>${pct((p.market_value / data.equity) * 100)}</td>
-                    <td class="${color}">${money(p.unrealized_pl)}</td>
-                    <td class="${color}">${pct(p.return_pct)}</td>
-                    <td class="${todayColor}">
-                        ${money(p.today_pl)} (${pct(p.today_return_pct)})
-                    </td>
-                </tr>
-             `;
-            tbody.innerHTML += row;
-        });
+        <div class="analytics-box">
+            <div class="analytics-title">SPY Benchmark</div>
+
+            <div class="metric">
+                <span class="metric-name">SPY Return</span>
+                <span class="metric-value">
+                    ${(a.spy_return * 100).toFixed(2)}%
+                </span>
+            </div>
+
+            <div class="metric">
+                <span class="metric-name">SPY Volatility</span>
+                <span class="metric-value">
+                    ${(a.spy_vol * 100).toFixed(2)}%
+                </span>
+            </div>
+
+            <div class="metric">
+                <span class="metric-name">Alpha</span>
+                <span class="metric-value">
+                    ${(a.alpha * 100).toFixed(2)}%
+                </span>
+            </div>
+        </div>
+    `;
 
         document.getElementById("updated").innerText =
             "Last updated: " + new Date().toLocaleTimeString();

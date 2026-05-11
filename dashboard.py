@@ -75,10 +75,6 @@ async def get_portfolio():
     )
     history = trading_client.get_portfolio_history(history_request)
 
-    # # Calculate SPY vs. Strategy Returns
-    # portfolio_equity = np.array(history.equity) if len(history.equity) > 1 else np.array([initial_capital])
-    # portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
-
     spy = yf.download("SPY", period="1y", interval="1d")["Close"].dropna()
     if spy is None or len(spy) < 2:
         spy_prices = np.array([1.0, 1.0])
@@ -144,25 +140,15 @@ async def get_portfolio():
     data.index = pd.to_datetime(data.index)
 
     returns = data.pct_change(fill_method=None).dropna()  # Calculate returns of the active positions
-    # weights = []
     weights = pd.Series(0.0, index=data.columns)
 
-    # tickers[1] = "BRK.B"  # Fix name mismatch between Alpaca and yfinance
     yf_map = {"BRK.B": "BRK-B"}  # Fix name mismatch between Alpaca and yfinance
-
-    # yf_tickers = [yf_map.get(t, t) for t in tickers]
 
     for t in tickers:
         yf_t = yf_map.get(t, t)
 
         if yf_t in positions_dict:
             weights[yf_t] = float(positions_dict[t].market_value) / equity
-
-    # for t in tickers:
-    #     if t not in positions_dict:  # If no position held in asset, weight should be 0
-    #         weights.append(0)
-    #     else:
-    #         weights.append(float(positions_dict[t].market_value) / equity)  # If held, find weight
 
     port_daily_rets = returns @ weights  # Daily returns for portfolio
 
@@ -181,7 +167,7 @@ async def get_portfolio():
 
     # Volatility
     strategy_vol = port_daily_rets.std() * np.sqrt(252)
-    spy_vol = np.std(spy_returns) if len(spy_returns) > 1 else 0.0
+    spy_vol = np.std(spy_returns) * np.sqrt(252) if len(spy_returns) > 1 else 0.0
 
     # Return
     spy_return = (spy_prices[-1] / spy_prices[0]) - 1 if len(spy_prices) > 1 else 0.0
