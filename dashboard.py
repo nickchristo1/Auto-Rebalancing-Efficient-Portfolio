@@ -79,7 +79,7 @@ async def get_portfolio():
     # portfolio_equity = np.array(history.equity) if len(history.equity) > 1 else np.array([initial_capital])
     # portfolio_returns = np.diff(portfolio_equity) / portfolio_equity[:-1]
 
-    spy = yf.download("SPY", period="1mo", interval="1d")["Close"].dropna()
+    spy = yf.download("SPY", period="1y", interval="1d")["Close"].dropna()
     if spy is None or len(spy) < 2:
         spy_prices = np.array([1.0, 1.0])
         spy_returns = np.array([0.0])
