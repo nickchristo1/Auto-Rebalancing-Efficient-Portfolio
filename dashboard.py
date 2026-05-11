@@ -148,7 +148,7 @@ async def get_portfolio():
     weights = pd.Series(0.0, index=data.columns)
 
     # tickers[1] = "BRK.B"  # Fix name mismatch between Alpaca and yfinance
-    yf_map = {"BRK-B": "BRK.B"}  # Fix name mismatch between Alpaca and yfinance
+    yf_map = {"BRK.B": "BRK-B"}  # Fix name mismatch between Alpaca and yfinance
 
     # yf_tickers = [yf_map.get(t, t) for t in tickers]
 
