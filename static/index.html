@@ -302,8 +302,8 @@ async function loadData() {
             </div>
         `;
 
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    const minValue = Math.min(values);
+    const maxValue = Math.max(values);
 
     const yMin = Math.floor(minValue / 500) * 500;
     const yMax = Math.ceil(maxValue / 500) * 500;
