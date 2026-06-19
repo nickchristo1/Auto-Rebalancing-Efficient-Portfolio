@@ -2,8 +2,8 @@ name: Weekly Auto-Rebalance
 
 on:
   schedule:
-    # Runs every Monday at 13:30 UTC (9:30 AM EST, or 8:30 AM EST (Daylight Savings))
-    - cron: '30 13 * * 1'
+    # 10:00 AM Eastern Daylight Time (14:00 UTC)
+    - cron: '5 14 * * *'
   workflow_dispatch: # Allows you to manually trigger it from the Actions tab
 
 jobs:
