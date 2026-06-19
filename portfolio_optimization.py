@@ -35,14 +35,17 @@ def eff_front_no_shorts(mu_target, mu_hat, cov_matrix):
     )
 
     # Bounds: No shorting
-    bounds = tuple((0, 1) for _ in range(n))
+    bounds = tuple((0, .225) for _ in range(n))
 
     init_guess = np.ones(n) / n
 
     res = minimize(objective, init_guess, method='SLSQP',
                    bounds=bounds, constraints=constraints)
 
-    return res.x if res.success else None
+    if not res.success:
+        raise ValueError(f"Optimization failed: {res.message}")
+
+    return res.x
 
 
 def find_gmv_return(mu_hat, cov_matrix):
@@ -59,17 +62,37 @@ def find_gmv_return(mu_hat, cov_matrix):
         return w @ cov_matrix @ w
 
     constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0})
-    bounds = tuple((0, 1) for _ in range(n))
+    bounds = tuple((0, .225) for _ in range(n))
     init_guess = np.ones(n) / n
 
     res = minimize(objective, init_guess, method='SLSQP', bounds=bounds, constraints=constraints)
     return res.x @ mu_hat  # This is the return of the GMV portfolio
 
 
+def max_feasible_return(mu_hat):
+    """
+    The Maximum feasible return is calculated by respecting the upper bound on positions and finding the theoretical
+    maximum return of a portfolio consisting of the chosen equities and the given constriants.
+    :param mu_hat: mean return vector
+    :return: maximum target return
+    """
+    n = len(mu_hat)
+
+    def objective(w):
+        return -(w @ mu_hat)
+
+    constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1})
+    bounds = [(0, 0.225)] * n
+
+    res = minimize(objective, np.ones(n)/n, method='SLSQP', bounds=bounds, constraints=constraints)
+
+    return -res.fun
+
+
 mu_hat = log_returns.mean().values
 
 mu_gmv = find_gmv_return(mu_hat, pca_F)
-mu_max = np.max(mu_hat)
+mu_max = max_feasible_return(mu_hat)
 
 std_devs = []
 expected_returns = []
@@ -100,7 +123,7 @@ plt.style.use('seaborn-v0_8')
 # 2.) Choose an Expected Return and Find the Portfolio Weights
 # ------------------------------------------------------------
 
-optimal_weights = eff_front_no_shorts(mus[12], mu_hat, pca_F)
+optimal_weights = eff_front_no_shorts(mus[18], mu_hat, pca_F)
 
 optimal_portfolio = pd.DataFrame({"Asset": log_returns.columns,
                                   "Weight": optimal_weights}
