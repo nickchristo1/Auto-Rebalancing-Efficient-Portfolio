@@ -83,19 +83,33 @@ def create_order(ticker, action, dollar_amount):
     :param action: "buy" or "sell"
     :param dollar_amount: the dollar amount of the transaction
     """
-    # Specify Buy or Sell
-    order_side = None
     if action == "buy":
-        order_side = OrderSide.BUY
-    elif action == "sell":
-        order_side = OrderSide.SELL
+        market_order = MarketOrderRequest(
+            symbol=ticker,
+            notional=round(dollar_amount, 2),
+            side=OrderSide.BUY,
+            time_in_force=TimeInForce.DAY
+        )
 
-    market_order = MarketOrderRequest(
-        symbol=ticker,
-        notional=round(dollar_amount, 2),
-        side=order_side,
-        time_in_force=TimeInForce.DAY
-    )
+    else:
+        position = client.get_open_position(ticker)
+
+        price = float(position.current_price)
+        qty_available = float(position.qty)
+        shares_needed = dollar_amount / price
+
+        # Keep from selling more than owned
+        shares_traded = min(
+            shares_needed,
+            qty_available * 0.995
+        )
+
+        market_order = MarketOrderRequest(
+            symbol=ticker,
+            qty=round(shares_traded, 4),
+            side=OrderSide.SELL,
+            time_in_force=TimeInForce.DAY
+        )
 
     client.submit_order(market_order)
     print(f"\nSubmitted order:\nTicker: {ticker}\nSide: {action}\nAmount: ${dollar_amount:.2f}"
