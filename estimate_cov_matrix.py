@@ -21,27 +21,22 @@ def get_rmt_threshold(N, d):
 
 # 1.) Get Financial Data and Find the Sample Covariance Matrix
 # ------------------------------------------------------------
-tickers = ['AGIX',    # KraneShares AI ETF  AI Index
-           'AMT',     # American Tower      Sector: Real Estate
+tickers = ['AMT',     # American Tower      Sector: Real Estate
            'BRK-B',   # Berkshire Hathaway  Sector: Financials
            'CAT',     # Caterpillar         Sector: Industrials
            'COST',    # Costco              Sector: Consumer Staples
            'GE',      # GE Aerospace        Sector: Industrials
-           'GEV',     # GE Vernova          Sector: Industrials
            'HD',      # Home Depot          Sector: Consumer Disc.
-           'IEX',     # IDEX Corp.          Sector: Industrials
            'JNJ',     # Johnson & Johnson   Sector: Health Care
            'MSFT',    # Microsoft           Sector: Information Tech
-           'MU',      # Micron Tech         Sector: Information Tech
            'NEE',     # NextEra Energy      Sector: Utilities
            'NVDA',    # NVIDIA              Sector: Information Tech
            'PG',      # Proctor & Gamble    Sector: Consumer Staples
            'PLD',     # Prologis            Sector: Real Estate
-           'SPY',     # S&P 500 ETF         Market Index
+           'SPY',     # S&P 500             Market Index
            'TSLA',    # Tesla               Sector: Consumer Disc.
            'UNH',     # UnitedHealth        Sector: Health Care
            'V',       # Visa                Sector: Financials
-           'VTRS',    # Viatris             Sector: Health Care
            'XOM']     # ExxonMobil          Sector: Energy
 
 data_amount = 700  # Amount of data wanted in the optimization
