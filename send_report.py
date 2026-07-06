@@ -5,6 +5,7 @@ from email.message import EmailMessage
 import matplotlib.pyplot as plt
 import io
 import os
+from dotenv import load_dotenv
 from tabulate import tabulate
 from backtest import table_data
 from auto_rebalance import buy_orders, sell_orders
@@ -75,6 +76,7 @@ def send_email(sender_email, sender_password, recipient_email, body_text, image_
 
 # 4.) Gather information to send as email
 # ---------------------------------------
+load_dotenv()
 email = "nick.christophides@gmail.com"
 password = os.getenv('GMAIL_PASSCODE')
 table_string = tabulate(table_data,
