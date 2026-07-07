@@ -132,7 +132,7 @@ plt.style.use('seaborn-v0_8')
 # 2.) Choose an Expected Return and Find the Portfolio Weights
 # ------------------------------------------------------------
 
-optimal_weights = eff_front_no_shorts(mus[18], mu_hat, pca_F)
+optimal_weights = eff_front_no_shorts(mus[12], mu_hat, pca_F)
 
 optimal_portfolio = pd.DataFrame({"Asset": log_returns.columns,
                                   "Weight": optimal_weights}
