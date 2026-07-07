@@ -50,8 +50,8 @@ target_asset_values = {ticker.replace('-', '.'): val for ticker, val in target_a
 all_assets = set(target_asset_values.keys()).union(current_positions_data.keys())
 
 
-# # 2.) Determine How Much of Each Asset to Buy/Sell, Separate Buy and Sell Orders
-# # ------------------------------------------------------------------------------
+# 2.) Determine How Much of Each Asset to Buy/Sell, Separate Buy and Sell Orders
+# ------------------------------------------------------------------------------
 buy_orders = {}
 sell_orders = {}
 

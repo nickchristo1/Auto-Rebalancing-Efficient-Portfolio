@@ -8,8 +8,9 @@
  desired level of return and volatility. """
 
 import pandas as pd
-from portfolio_optimization import eff_front_no_shorts, find_gmv_return
+from portfolio_optimization import eff_front_no_shorts
 from estimate_cov_matrix import tickers, estimate_cov_matrix
+from black_litterman import posterior_returns
 import yfinance as yf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,9 +44,7 @@ for current_date, day_returns in daily_returns.iterrows():
         cov_mat, _ = estimate_cov_matrix(np.cov(np.array(log_returns_std), rowvar=False), log_returns)
 
         # In-Sample Optimization
-        mu_gmv = find_gmv_return(mu_hat, cov_mat)
-        mus = np.linspace(mu_gmv, np.max(mu_hat), 25)
-        optimal_weights = np.array(eff_front_no_shorts(mus[12], mu_hat, cov_mat))
+        optimal_weights = np.array(eff_front_no_shorts(posterior_returns, cov_mat))
 
         # Update the weekly tracker
         rebalance_dates.append(current_date)

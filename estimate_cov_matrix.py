@@ -38,7 +38,6 @@ tickers = ['AGIX',    # KraneShares ETF     Sector: AI ETF
            'PG',      # Proctor & Gamble    Sector: Consumer Staples
            'PLD',     # Prologis            Sector: Real Estate
            'SPY',     # S&P 500             Market Index
-           'TSLA',    # Tesla               Sector: Consumer Disc.
            'UNH',     # UnitedHealth        Sector: Health Care
            'V',       # Visa                Sector: Financials
            'VTRS',    # Viatris             Sector: Healthcare
