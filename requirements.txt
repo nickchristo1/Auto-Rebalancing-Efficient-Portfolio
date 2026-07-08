@@ -8,3 +8,4 @@ tabulate
 fastapi
 uvicorn
 python-dotenv
+sklearn
