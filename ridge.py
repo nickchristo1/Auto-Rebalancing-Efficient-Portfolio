@@ -7,11 +7,16 @@ that will allow the regressions to be input to the return vector, to provide mor
 historical return.
 """
 
+from datetime import datetime
 import pandas as pd
 import numpy as np
 from estimate_cov_matrix import prices
 from sklearn.linear_model import Ridge
 from scipy.stats import spearmanr
+import os
+import json
+
+STATE_FILE = "model_state.json"
 
 
 def prepare_panel_data(daily_prices):
@@ -139,7 +144,6 @@ def optimize_ridge_penalty(panel_df, feature_cols, target_col='Target_Fwd_Ret',
 
     best_alpha = None
     best_ir = -np.inf
-    best_oos_results = None
 
     for alpha in alphas:
         oos_res = walk_forward_ridge(panel_df, feature_cols, target_col, alpha, min_train_weeks)
@@ -151,12 +155,11 @@ def optimize_ridge_penalty(panel_df, feature_cols, target_col='Target_Fwd_Ret',
         if ic_ir > best_ir:
             best_ir = ic_ir
             best_alpha = alpha
-            best_oos_results = oos_res
 
     print("-" * 37)
     print(f"Optimal Alpha Selected: {best_alpha:.2f}")
 
-    return best_alpha, best_oos_results
+    return best_alpha
 
 
 def apply_ema_smoothing(oos_results, pred_col='Predicted_Ret', span=3):
@@ -176,15 +179,50 @@ def apply_ema_smoothing(oos_results, pred_col='Predicted_Ret', span=3):
     return smoothed_results.dropna(subset=['Smoothed_Predicted_Ret'])
 
 
-# --- Execution ---
-panel_data = prepare_panel_data(prices)
+def get_model_state():
+    if os.path.exists(STATE_FILE):
+        with open(STATE_FILE, "r") as f:
+            return json.load(f)
+    return {"optimal_alpha": None, "last_optimized_month": None}
 
-# Standardize the features cross-sectionally
+
+def save_model_state(alpha, month):
+    with open(STATE_FILE, "w") as f:
+        json.dump({"optimal_alpha": alpha, "last_optimized_month": month}, f)
+
+
+# 1.) Execution, only re-optimize the parameters at the beginning of the month to avoid chasing noise
+# ---------------------------------------------------------------------------------------------------
+
+# Get the current month and last saved state to check if we need to re-optimize the alpha parameter
+current_date = datetime.today()
+current_month = current_date.month
+
+state = get_model_state()
+optimal_alpha = state["optimal_alpha"]
+last_optimized_month = state["last_optimized_month"]
+
+# Prepare panel and features
+panel_data = prepare_panel_data(prices)
 features = ['Mom_1M', 'Mom_6M', 'Mom_12M', 'Vol_3M']
 standardized_panel = cross_sectional_standardize(panel_data, features)
-alphas_to_test = np.logspace(0, 4, 10)  # Testing penalties from 1 to 10,000
-optimal_alpha, raw_predictions = optimize_ridge_penalty(standardized_panel, features,
-                                                        alphas=alphas_to_test, min_train_weeks=20)
 
-# Apply the 4-week EMA to the raw predictions (Exponential Moving Average)
-smoothed_predictions = apply_ema_smoothing(raw_predictions, span=4)
+# If we haven't optimized this month, do it now
+if last_optimized_month != current_month:
+    print(f"[{current_date.date()}] New Month Detected. Running Alpha Optimization...")
+    
+    # Optimize
+    optimal_alpha = optimize_ridge_penalty(standardized_panel, features, 
+                                            alphas=np.logspace(0, 4, 40), min_train_weeks=20)
+    
+    # Persist the state
+    save_model_state(optimal_alpha, current_month)
+else:
+    print(f"[{current_date.date()}] Using existing Alpha: {optimal_alpha:.2f}")
+
+# Run ridge regression using the alpha we either just found or loaded from state
+ridge_preds = walk_forward_ridge(standardized_panel, feature_cols=features, 
+                                 target_col='Target_Fwd_Ret', alpha=optimal_alpha, 
+                                 min_train_weeks=20)
+
+smoothed_predictions = apply_ema_smoothing(ridge_preds, span=4)

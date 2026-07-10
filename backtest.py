@@ -45,6 +45,7 @@ for current_date, day_returns in daily_returns.iterrows():
 
         # In-Sample Optimization
         optimal_weights = np.array(eff_front_no_shorts(posterior_returns, cov_mat))
+        # ** FOR A TRUE BACKTEST, WE WOULD NEED TO GET A NEW POSTERIOR RETURNS VECTOR AT EACH REBALANCE
 
         # Update the weekly tracker
         rebalance_dates.append(current_date)
