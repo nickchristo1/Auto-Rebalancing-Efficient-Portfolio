@@ -48,10 +48,13 @@ else:
     # If today isn't a trading day, grab the most recent available date
     target_date = smoothed_predictions.index.get_level_values(0).max()
 
+# Tau: small scalar that represents the uncertainty in the estimate of returns (pi). 
+# A smaller tau indicates more confidence in the prior, larger tau indicates less.
 tau = 0.05
+
 P = np.eye(len(tickers))  # P is an identity matrix because we have a view on every asset
 Q = smoothed_predictions.xs(target_date, level=0)['Smoothed_Predicted_Ret'] * 52
-Q = Q.clip(lower=-0.5, upper=1)  # Don't allow for overly extreme predictions
+Q = Q.clip(lower=-0.5, upper=0.6)  # Don't allow for overly extreme predictions
 
 # Omega: The uncertainty of the views
 omega = np.diag(np.diag(tau * cov_matrix))

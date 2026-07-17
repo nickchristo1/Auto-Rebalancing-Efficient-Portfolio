@@ -1,11 +1,7 @@
 # Nicholas Christophides  nick.christophides@gmail.com
 
 """ In backtest.py the optimizer is back-tested over the last 6 months to determine how the portfolio it gives would
- perform over that time period.
- *NOTE: The optimizer will be given different data in the backtest than in the actual portfolio used for trading. As
- a result of this, this back-tester isn't meant to be used as proof of future performance of the portfolio that is
- given, but instead used as supporting evidence that the optimizer can produce portfolios that have approximately the
- desired level of return and volatility. """
+ perform over that time period."""
 
 import pandas as pd
 from portfolio_optimization import eff_front_no_shorts
